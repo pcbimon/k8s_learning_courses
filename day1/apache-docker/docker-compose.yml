@@ -1,0 +1,15 @@
+networks:
+  httpd_network:
+    name: httpd_network
+    driver: bridge
+
+services:
+  httpd:
+    container_name: httpd
+    image: httpd:2.4.41-alpine
+    volumes:
+      - ./html:/usr/local/apache2/htdocs/
+    ports:
+      - "81:80"
+    networks:
+      - httpd_network
