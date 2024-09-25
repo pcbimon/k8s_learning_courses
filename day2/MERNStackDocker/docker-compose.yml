@@ -1,9 +1,11 @@
 networks:
-  app_networks:
-    name: app_networks
+  app_network:
+    name: app_network
     driver: bridge
+
 services:
-  # Postgres service
+  
+  # PostgresSQL Service
   postgres:
     image: postgres:latest
     container_name: postgres_db
@@ -14,40 +16,44 @@ services:
     ports:
       - "6432:5432"
     volumes:
-      - ./volumes/postgres:/var/lib/postgresql/data
-      - ./sql/init_postgres.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./volumes/postgres:/var/lib/postgresql/data # Mount volume
+      - ./sql/init_postgresql.sql:/docker-entrypoint-initdb.d/init.sql # init script
     networks:
-      - app_networks
+      - app_network
     restart: always
+  
   # MySQL Service
   mysql:
     image: mysql:latest
     container_name: mysql_db
     environment:
-      - MYSQL_ROOT_PASSWORD=123456
-      - MYSQL_DATABASE=storedb
-      - MYSQL_USER=myuser
-      - MYSQL_PASSWORD=123456
-    volumes:
-      - ./volumes/mysql:/var/lib/mysql/ # สร้าง Volume สำหรับเก็บข้อมูล
-      - ./sql/init_mysql.sql:/docker-entrypoint-initdb.d/ # init script สำหรับสร้าง Table
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: storedb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: 123456
     ports:
       - "5506:3306"
+    volumes:
+      - ./volumes/mysql:/var/lib/mysql  # Mount volume สำหรับ MySQL
+      - ./sql/init_mysql.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - app_networks
+      - app_network
     restart: always
-  # Sqlite Service
+  
+  # SQLite Service
   sqlite:
+    platform: linux/x86_64
     image: nouchka/sqlite3
     container_name: sqlite_db
     environment:
-      - DB_PATH=/data/sqlite/storedb.db
+      DB_PATH: /data/sqlite/storedb.db
     volumes:
-      - ./volumes/sqlite:/data/sqlite
-    # command: tail -f /dev/null # Keep container running
+      - ./data:/data  # Mount volume สำหรับ SQLite
+    command: tail -f /dev/null # Keep container running
     networks:
-      - app_networks
+      - app_network
     restart: always
+
   # SQL Server Service (Azure SQL Edge)
   mssql:
     image: mcr.microsoft.com/azure-sql-edge:latest
@@ -62,8 +68,9 @@ services:
       - ./volumes/mssql:/var/opt/mssql  # Mount volume สำหรับ SQL Server
       - ./sql/init_sqlserver.sql:/var/opt/mssql/init.sql
     networks:
-      - app_networks
+      - app_network
     restart: always
+
   # MongoDB Service
   mongo:
     image: mongo:latest
@@ -78,5 +85,5 @@ services:
       - ./volumes/mongodb:/data/db  # Mount volume สำหรับ MongoDB
       - ./sql/init_mongodb.json:/docker-entrypoint-initdb.d/init.json
     networks:
-      - app_networks
+      - app_network
     restart: always
